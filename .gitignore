@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.expo/
+dist/
+dist-check/
+preview-web/
+.local-mongo/
+.test-mongo/
+.npm-cache/
+*.log
+.qa-preview.cjs

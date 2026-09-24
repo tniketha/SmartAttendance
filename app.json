@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "SmartAttendance",
+    "slug": "smart-attendance",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.smartattendance.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app requires camera access to scan attendance QR codes.",
+        "NSLocationWhenInUseUsageDescription": "This app requires location access to verify attendance inside the classroom."
+      }
+    },
+    "android": {
+      "package": "com.smartattendance.app",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-asset",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow camera access to scan classroom attendance QR codes.",
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-location",
+      "expo-secure-store"
+    ]
+  }
+}
