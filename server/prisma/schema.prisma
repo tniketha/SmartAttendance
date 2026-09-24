@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  LECTURER
+  ADMIN
+}
+
+enum SessionStatus {
+  ACTIVE
+  CLOSED
+  EXPIRED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+model User {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  email        String    @unique
+  sessionVersion Int @default(0)
+  refreshTokenHash String?
+  passwordHash String    @map("password_hash")
+  name         String
+  role         Role      @default(STUDENT)
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  student      Student?
+  lecturer     Lecturer?
+  auditLogs    AttendanceAuditLog[]
+
+  @@map("users")
+}
+
+model Student {
+  id                String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String             @unique @map("user_id") @db.ObjectId
+  studentNumber     String             @unique @map("student_number")
+  departmentId      String             @map("department_id") @db.ObjectId
+  programme         String
+  academicYear      String             @map("academic_year")
+  batch             String
+  profilePictureUrl String?            @map("profile_picture_url")
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department        Department         @relation(fields: [departmentId], references: [id])
+  enrollments       Enrollment[]
+  attendanceRecords AttendanceRecord[]
+
+  @@map("students")
+}
+
+model Lecturer {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String              @unique @map("user_id") @db.ObjectId
+  employeeNumber     String              @unique @map("employee_number")
+  departmentId       String              @map("department_id") @db.ObjectId
+  title              String?
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department         Department          @relation(fields: [departmentId], references: [id])
+  modules            Module[]
+  attendanceSessions AttendanceSession[]
+
+  @@map("lecturers")
+}
+
+model Department {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  name      String     @unique
+  code      String     @unique
+  students  Student[]
+  lecturers Lecturer[]
+  modules   Module[]
+
+  @@map("departments")
+}
+
+model Module {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  moduleCode         String              @unique @map("module_code")
+  moduleName         String              @map("module_name")
+  departmentId       String              @map("department_id") @db.ObjectId
+  lecturerId         String              @map("lecturer_id") @db.ObjectId
+  academicYear       String              @map("academic_year")
+  semester           Int
+
+  department         Department          @relation(fields: [departmentId], references: [id])
+  lecturer           Lecturer            @relation(fields: [lecturerId], references: [id])
+  enrollments        Enrollment[]
+  attendanceSessions AttendanceSession[]
+
+  @@map("modules")
+}
+
+model Enrollment {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  studentId  String   @map("student_id") @db.ObjectId
+  moduleId   String   @map("module_id") @db.ObjectId
+  enrolledAt DateTime @default(now()) @map("enrolled_at")
+
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  module     Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, moduleId])
+  @@map("enrollments")
+}
+
+model AttendanceSession {
+  id                   String             @id @default(auto()) @map("_id") @db.ObjectId
+  sessionCode          String             @unique @map("session_code")
+  moduleId             String             @map("module_id") @db.ObjectId
+  lecturerId           String             @map("lecturer_id") @db.ObjectId
+  sessionDate          DateTime           @map("session_date")
+  startTime            DateTime           @map("start_time")
+  endTime              DateTime           @map("end_time")
+  lateThresholdTime    DateTime?          @map("late_threshold_time")
+  currentQrToken       String             @map("current_qr_token")
+  tokenExpiry          DateTime           @map("token_expiry")
+  status               SessionStatus      @default(ACTIVE)
+  latitude             Float?
+  longitude            Float?
+  allowedRadius        Float?             @default(100) @map("allowed_radius")
+  geoValidationEnabled Boolean            @default(false) @map("geo_validation_enabled")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  module               Module             @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  lecturer             Lecturer           @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  attendanceRecords    AttendanceRecord[]
+
+  @@index([moduleId, status])
+  @@map("attendance_sessions")
+}
+
+model AttendanceRecord {
+  id                 String               @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId          String               @map("session_id") @db.ObjectId
+  studentId          String               @map("student_id") @db.ObjectId
+  attendanceStatus   AttendanceStatus     @map("attendance_status")
+  scannedAt          DateTime?            @map("scanned_at")
+  latitude           Float?
+  longitude          Float?
+  verificationMethod String               @default("QR_SCAN") @map("verification_method")
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+
+  session            AttendanceSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student            Student              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  auditLogs          AttendanceAuditLog[]
+  reviewRequest      AttendanceReviewRequest?
+
+  @@unique([sessionId, studentId])
+  @@index([studentId, attendanceStatus])
+  @@index([sessionId])
+  @@map("attendance_records")
+}
+
+model AttendanceReviewRequest {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  attendanceRecordId String @unique @db.ObjectId
+  requestedStatus AttendanceStatus
+  reason String
+  status String @default("PENDING")
+  decisionReason String?
+  resolvedById String? @db.ObjectId
+  createdAt DateTime @default(now())
+  resolvedAt DateTime?
+  attendanceRecord AttendanceRecord @relation(fields: [attendanceRecordId], references: [id], onDelete: Cascade)
+  @@index([status, createdAt])
+  @@map("attendance_review_requests")
+}
+
+model AttendanceAuditLog {
+  id                 String           @id @default(auto()) @map("_id") @db.ObjectId
+  attendanceRecordId String           @map("attendance_record_id") @db.ObjectId
+  changedById        String           @map("changed_by") @db.ObjectId
+  oldStatus          AttendanceStatus @map("old_status")
+  newStatus          AttendanceStatus @map("new_status")
+  reason             String
+  changedAt          DateTime         @default(now()) @map("changed_at")
+
+  attendanceRecord   AttendanceRecord @relation(fields: [attendanceRecordId], references: [id], onDelete: Cascade)
+  changedBy          User             @relation(fields: [changedById], references: [id])
+
+  @@map("attendance_audit_logs")
+}
