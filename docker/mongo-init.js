@@ -13,12 +13,13 @@ for (let attempt = 0; attempt < 60; attempt++) {
   }
 }
 const admin = connection.getDB('admin');
-const status = admin.runCommand({ replSetGetStatus: 1 });
-if (status.code === 94) {
+try {
+  admin.runCommand({ replSetGetStatus: 1 });
+} catch (error) {
+  // mongosh throws for command failures rather than returning an {ok: 0} result.
+  if (error.code !== 94) throw error;
   const result = admin.runCommand({ replSetInitiate: { _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] } });
   if (!result.ok) throw new Error(result.errmsg);
-} else if (!status.ok) {
-  throw new Error(status.errmsg);
 }
 for (let attempt = 0; !admin.runCommand({ hello: 1 }).isWritablePrimary; attempt++) {
   if (attempt === 60) throw new Error('MongoDB did not elect a primary');
