@@ -1,0 +1,39 @@
+name: Docker verification
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate disposable secrets
+        run: node docker/setup.cjs
+      - name: Build and start complete stack
+        run: docker compose up --build -d --wait --wait-timeout 240
+      - name: Verify web, proxy, replica set, and Socket.IO
+        run: |
+          curl --fail http://localhost:8080/ | grep -q '<html'
+          curl --fail http://localhost:8080/api/ready | grep -q '"success":true'
+          curl --fail 'http://localhost:8080/socket.io/?EIO=4&transport=polling' | grep -q '"sid"'
+          curl --fail http://localhost:8080/student/history | grep -q '<html'
+      - name: Run existing security integration tests in Docker
+        run: docker compose --profile test run --build --rm test
+      - name: Check restart and persistent database
+        run: |
+          docker compose restart mongo api web
+          docker compose up -d --wait --wait-timeout 240
+          curl --fail http://localhost:8080/api/ready | grep -q '"success":true'
+      - name: Diagnostics
+        if: failure()
+        run: docker compose ps -a && docker compose logs --no-color
+      - name: Cleanup disposable stack
+        if: always()
+        run: docker compose --profile test down -v

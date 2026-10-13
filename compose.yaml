@@ -1,0 +1,138 @@
+name: smartattendance
+
+x-api-environment: &api-environment
+  NODE_ENV: production
+  PORT: "5000"
+  DATABASE_URL: mongodb://attendance:${MONGO_APP_PASSWORD:?Run node docker/setup.cjs first}@mongo:27017/smart_attendance?authSource=smart_attendance&replicaSet=rs0
+  JWT_SECRET: ${JWT_SECRET:?Run node docker/setup.cjs first}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Run node docker/setup.cjs first}
+  QR_TOKEN_SECRET: ${QR_TOKEN_SECRET:?Run node docker/setup.cjs first}
+  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+  TRUST_PROXY_HOPS: "1"
+
+services:
+  mongo:
+    image: mongo:8.0
+    restart: unless-stopped
+    # Keep the key in a Linux volume: Windows bind mounts cannot enforce its permissions.
+    entrypoint: ["bash", "-ec"]
+    command:
+      - |
+        if [ ! -s /data/configdb/keyfile ]; then
+          umask 077
+          openssl rand -base64 756 > /data/configdb/keyfile
+        fi
+        chown mongodb:mongodb /data/configdb/keyfile
+        chmod 400 /data/configdb/keyfile
+        exec /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --keyFile /data/configdb/keyfile
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Run node docker/setup.cjs first}
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand({ping:1}).ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  mongo-init:
+    image: mongo:8.0
+    restart: "no"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Run node docker/setup.cjs first}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?Run node docker/setup.cjs first}
+    volumes:
+      - ./docker/mongo-init.js:/init.js:ro
+    command: ["mongosh", "--nodb", "--quiet", "/init.js"]
+
+  db-setup:
+    build:
+      context: .
+      target: tools
+    restart: "no"
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    environment: *api-environment
+    command: ["npm", "run", "prisma:push"]
+
+  api:
+    build:
+      context: .
+      target: api
+    init: true
+    restart: unless-stopped
+    depends_on:
+      db-setup:
+        condition: service_completed_successfully
+    environment: *api-environment
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5000/api/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      target: web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-http://:80}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-8080}:80"
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-8443}:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  seed:
+    profiles: ["demo"]
+    build:
+      context: .
+      target: tools
+    depends_on:
+      db-setup:
+        condition: service_completed_successfully
+    environment:
+      <<: *api-environment
+      NODE_ENV: development
+      ALLOW_DEMO_RESET: ${ALLOW_DEMO_RESET:-false}
+    command: ["npm", "run", "seed"]
+
+  test:
+    profiles: ["test"]
+    build:
+      context: .
+      target: test
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *api-environment
+      NODE_ENV: test
+      TRUST_PROXY_HOPS: "0"
+      DATABASE_URL: mongodb://attendance:${MONGO_APP_PASSWORD:?Run node docker/setup.cjs first}@mongo:27017/attendance_security_test?authSource=smart_attendance&replicaSet=rs0
+      TEST_DATABASE_URL: mongodb://attendance:${MONGO_APP_PASSWORD:?Run node docker/setup.cjs first}@mongo:27017/attendance_security_test?authSource=smart_attendance&replicaSet=rs0
+    command: ["sh", "-ec", "npm run prisma:push && npm test"]
+
+volumes:
+  mongo-data:
+  mongo-config:
+  caddy-data:
+  caddy-config:

@@ -23,6 +23,8 @@ const httpServer = http.createServer(app);
 // 1. Security & Standard Middleware
 app.use(helmet());
 app.disable('x-powered-by');
+// Docker exposes only the Caddy proxy; direct development access trusts no proxy.
+if (ENV.TRUST_PROXY_HOPS) app.set('trust proxy', ENV.TRUST_PROXY_HOPS);
 app.use(cors({ origin: ENV.ALLOWED_ORIGINS }));
 app.use('/api', (_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
 app.use(express.json({ limit: '16kb' }));

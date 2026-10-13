@@ -22,6 +22,51 @@ This reduces common attendance abuse; it does not prove physical presence. A liv
 - A MongoDB **replica set** (local or hosted). A standalone MongoDB server is insufficient for the transactions that protect attendance and audit records.
 - Android Studio for local Android builds; macOS and Xcode for local iOS builds. Signed store builds require the institution's developer accounts and signing credentials.
 
+## Run the complete web app in Docker
+
+Install Docker Engine with Compose v2, or Docker Desktop using **Linux containers** on Windows/macOS. Docker runs the web interface, API, Socket.IO, and an authenticated MongoDB replica set. Android/iOS still run on a device or emulator.
+
+From the project root, generate private local secrets and start the stack:
+
+```powershell
+docker run --rm -v "${PWD}:/workspace" -w /workspace node:22-bookworm-slim node docker/setup.cjs
+docker compose up --build -d --wait --wait-timeout 240
+```
+
+If Node is already installed, `node docker/setup.cjs` replaces the first command. Setup preserves existing nonempty secrets in the root `.env`; it never prints them. Database passwords must be URI-safe (the generator uses hex). Do not commit or share `.env`. Keep it with your database backups: changing passwords in this file does not rotate passwords in a persisted MongoDB volume.
+
+Open **http://localhost:8080**. The web build uses its current origin for `/api` and Socket.IO, so changing the host/port does not require rebuilding the frontend. Only Caddy is published to the host; the API and database stay on the Compose network. Startup initializes the replica set and creates indexes before the API starts. It never seeds or deletes attendance records. The initial database has no users; use your institutional provisioning/import process, or explicitly seed a disposable demo database:
+
+```powershell
+docker compose --profile demo run --rm -e ALLOW_DEMO_RESET=true seed
+```
+
+**Seeding deletes demo collections. Do not run it on real data.** Demo logins: `admin@univ.ac.lk`, `lecturer@univ.ac.lk`, and `stu001@student.univ.ac.lk` through `stu010@student.univ.ac.lk`; all use `password123`.
+
+Useful commands:
+
+```powershell
+docker compose ps -a
+docker compose logs -f api web
+docker compose --profile test run --build --rm test
+docker compose down
+docker compose up --build -d --wait --wait-timeout 240
+```
+
+`down` preserves MongoDB data and Caddy certificates in named volumes. `down -v` deletes them permanently; use it only to reset a disposable database. The test profile uses the dedicated `attendance_security_test` database, never the application database. `.github/workflows/docker.yml` builds the images, checks the web/API/Socket.IO proxy, runs the existing security suite, and checks restart recovery on GitHub.
+
+For a public HTTPS host, point the domain at the Docker host, allow ports 80/443, and add these values to the root `.env` before restarting:
+
+```dotenv
+SITE_ADDRESS=https://attendance.example.com
+ALLOWED_ORIGINS=https://attendance.example.com
+BIND_ADDRESS=0.0.0.0
+HTTP_PORT=80
+HTTPS_PORT=443
+```
+
+Caddy obtains and renews TLS certificates automatically. Use your actual domain. HTTPS is required for camera/location access outside localhost; adding an HTTP LAN address to a production origin is refused. If you only change the local port, update `HTTP_PORT` and the exact loopback origins in `ALLOWED_ORIGINS` together. Keep one API process; this single-node replica set supports transactions but has no high availability. Schedule database backups before storing real records. Index setup deliberately omits `--accept-data-loss`; incompatible schema changes stop startup for review.
+
 The previous configuration used a standalone local database. Its data and `server/.env` were not overwritten. Point the API at a replica set before using the revised attendance workflows. Back up and migrate existing records separately; do not seed a database containing real attendance.
 
 ## Development setup

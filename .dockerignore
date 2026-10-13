@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+**/.git
+.expo
+.local-mongo
+.test-mongo
+.npm-cache
+preview-web
+dist-check
+**/*.log
+.github

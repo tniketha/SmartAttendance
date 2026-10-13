@@ -10,12 +10,20 @@ function secret(name: string) {
   return randomBytes(48).toString('hex');
 }
 const origins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8081,http://localhost:19006').split(',').map(s => s.trim()).filter(Boolean);
-if (production && (!process.env.ALLOWED_ORIGINS || origins.some(s => !s.startsWith('https://') || s.includes('*')))) throw new Error('Production requires explicit HTTPS ALLOWED_ORIGINS');
+if (production && (!process.env.ALLOWED_ORIGINS || origins.length === 0 || origins.some(s => {
+  try {
+    const url = new URL(s);
+    const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+    return s.includes('*') || url.origin !== s || !(url.protocol === 'https:' || (url.protocol === 'http:' && loopback));
+  } catch { return true; }
+}))) throw new Error('Production requires explicit HTTPS origins (loopback HTTP is allowed for local Docker)');
+const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS || 0);
+if (!Number.isInteger(trustProxyHops) || trustProxyHops < 0 || trustProxyHops > 1) throw new Error('TRUST_PROXY_HOPS must be 0 or 1');
 export const ENV = {
   PORT: Number(process.env.PORT || 5000), NODE_ENV: process.env.NODE_ENV || 'development',
   DATABASE_URL: process.env.DATABASE_URL || '', JWT_SECRET: secret('JWT_SECRET'),
   JWT_REFRESH_SECRET: secret('JWT_REFRESH_SECRET'), QR_TOKEN_SECRET: secret('QR_TOKEN_SECRET'),
-  ALLOWED_ORIGINS: origins, QR_REFRESH_INTERVAL_SECONDS: Number(process.env.QR_REFRESH_INTERVAL_SECONDS || 20),
+  ALLOWED_ORIGINS: origins, TRUST_PROXY_HOPS: trustProxyHops, QR_REFRESH_INTERVAL_SECONDS: Number(process.env.QR_REFRESH_INTERVAL_SECONDS || 20),
   JWT_EXPIRES_IN: '15m', JWT_REFRESH_EXPIRES_IN: '7d',
 };
 if (new Set([ENV.JWT_SECRET, ENV.JWT_REFRESH_SECRET, ENV.QR_TOKEN_SECRET]).size !== 3) throw new Error('Signing keys must be distinct');
