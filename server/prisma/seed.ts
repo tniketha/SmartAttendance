@@ -1,5 +1,6 @@
-import { PrismaClient, Role, AttendanceStatus } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import demo from './demo-data.json';
 
 const prisma = new PrismaClient();
 
@@ -24,8 +25,8 @@ async function main() {
   // 1. Create Department
   const department = await prisma.department.create({
     data: {
-      name: 'Department of Physical Science',
-      code: 'DPS',
+      name: demo.department.name,
+      code: demo.department.code,
     },
   });
   console.log(`✓ Created Department: ${department.name}`);
@@ -33,8 +34,8 @@ async function main() {
   // 2. Create Admin User
   const adminUser = await prisma.user.create({
     data: {
-      email: 'admin@univ.ac.lk',
-      name: 'System Administrator',
+      email: demo.admin.email,
+      name: demo.admin.name,
       passwordHash,
       role: Role.ADMIN,
     },
@@ -44,8 +45,8 @@ async function main() {
   // 3. Create Lecturer
   const lecturerUser = await prisma.user.create({
     data: {
-      email: 'lecturer@univ.ac.lk',
-      name: 'Dr. Robert Smith',
+      email: demo.lecturer.email,
+      name: demo.lecturer.name,
       passwordHash,
       role: Role.LECTURER,
     },
@@ -54,34 +55,15 @@ async function main() {
   const lecturer = await prisma.lecturer.create({
     data: {
       userId: lecturerUser.id,
-      employeeNumber: 'EMP001',
+      employeeNumber: demo.lecturer.employeeNumber,
       departmentId: department.id,
-      title: 'Senior Lecturer',
+      title: demo.lecturer.title,
     },
   });
   console.log(`✓ Created Lecturer: ${lecturerUser.name} (${lecturer.employeeNumber})`);
 
   // 4. Create Modules
-  const modulesData = [
-    {
-      moduleCode: 'CSC3213',
-      moduleName: 'Computer Architecture',
-      academicYear: 'Year 3',
-      semester: 1,
-    },
-    {
-      moduleCode: 'CSH3153',
-      moduleName: 'Human Computer Interaction',
-      academicYear: 'Year 3',
-      semester: 1,
-    },
-    {
-      moduleCode: 'CSC3112',
-      moduleName: 'Computer Graphics',
-      academicYear: 'Year 3',
-      semester: 1,
-    },
-  ];
+  const modulesData = demo.modules;
 
   const createdModules = [];
   for (const m of modulesData) {
@@ -100,18 +82,7 @@ async function main() {
   }
 
   // 5. Create Students
-  const studentsList = [
-    { id: 'STU001', name: 'Nimal Perera', email: 'stu001@student.univ.ac.lk' },
-    { id: 'STU002', name: 'Kamal Silva', email: 'stu002@student.univ.ac.lk' },
-    { id: 'STU003', name: 'Amal Fernando', email: 'stu003@student.univ.ac.lk' },
-    { id: 'STU004', name: 'Sunil Jayawardena', email: 'stu004@student.univ.ac.lk' },
-    { id: 'STU005', name: 'Kasun Bandara', email: 'stu005@student.univ.ac.lk' },
-    { id: 'STU006', name: 'Dilani Wickramasinghe', email: 'stu006@student.univ.ac.lk' },
-    { id: 'STU007', name: 'Ruwan Dissanayake', email: 'stu007@student.univ.ac.lk' },
-    { id: 'STU008', name: 'Anura Gunasekara', email: 'stu008@student.univ.ac.lk' },
-    { id: 'STU009', name: 'Chathuri Senanayake', email: 'stu009@student.univ.ac.lk' },
-    { id: 'STU010', name: 'Mahesh Thilakarathne', email: 'stu010@student.univ.ac.lk' },
-  ];
+  const studentsList = demo.students;
 
   const createdStudents = [];
   for (const s of studentsList) {
@@ -127,16 +98,16 @@ async function main() {
     const student = await prisma.student.create({
       data: {
         userId: user.id,
-        studentNumber: s.id,
+        studentNumber: s.studentNumber,
         departmentId: department.id,
-        programme: 'BSc Honours in Computer Science',
-        academicYear: 'Year 3',
-        batch: '2023/2024',
+        programme: demo.programme,
+        academicYear: demo.academicYear,
+        batch: demo.batch,
       },
     });
     createdStudents.push(student);
 
-    // Enroll in all 3 modules
+    // Enroll in the selected Computer Science curriculum modules
     for (const mod of createdModules) {
       await prisma.enrollment.create({
         data: {
@@ -151,9 +122,9 @@ async function main() {
   console.log('\n🎉 Database seeding completed successfully!');
   console.log('----------------------------------------------------');
   console.log('Default Credentials (Password for all: password123):');
-  console.log('Lecturer: lecturer@univ.ac.lk');
-  console.log('Students: stu001@student.univ.ac.lk ... stu010@student.univ.ac.lk');
-  console.log('Admin:    admin@univ.ac.lk');
+  console.log(`Lecturer: ${demo.lecturer.email}`);
+  console.log(`Students: ${demo.students[0].studentNumber} through ${demo.students[demo.students.length - 1].studentNumber}`);
+  console.log(`Admin: ${demo.admin.email}`);
   console.log('----------------------------------------------------');
 }
 

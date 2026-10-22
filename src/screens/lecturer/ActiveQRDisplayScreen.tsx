@@ -23,6 +23,7 @@ import { lecturerApi, CloseSessionResponse } from '../../api/lecturer.api';
 import { SOCKET_URL, APP_CONFIG } from '../../constants/config';
 import { LiveSessionData, LiveCheckedInStudent } from '../../types/attendance.types';
 import { formatTime } from '../../utils/date.utils';
+import { semesterLabel } from '../../utils/semester.utils';
 
 export const ActiveQRDisplayScreen: React.FC = () => {
   const { Colors } = useTheme();
@@ -207,6 +208,7 @@ export const ActiveQRDisplayScreen: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.moduleCode}>{moduleCode}</Text>
         <Text style={styles.moduleName}>{moduleName}</Text>
+        {sessionData && <Text style={{ color: Colors.textSecondary, marginTop: 4 }}>{semesterLabel(sessionData.session)}</Text>}
         <View style={styles.badgeRow}>
           <Badge label={closed.current ? 'Attendance ended' : 'Attendance active'} variant={closed.current ? 'closed' : 'active'} />
           <Text style={styles.sessionTime}>

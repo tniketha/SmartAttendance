@@ -4,6 +4,7 @@ import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/authStore';
 import { useTheme, ThemeColors } from '../store/themeStore';
+import { BrandLogo } from '../components/common/BrandLogo';
 
 // Screens & Navigators
 import { LoginScreen } from '../screens/auth/LoginScreen';
@@ -25,6 +26,7 @@ export const RootNavigator: React.FC = () => {
   if (isLoading) {
     return (
       <View style={styles.center}>
+        <View style={{ marginBottom: 24 }}><BrandLogo size={72} /></View>
         <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );

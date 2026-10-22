@@ -34,6 +34,7 @@ COPY package*.json ./
 COPY tools ./tools
 RUN npm ci --no-audit --no-fund
 COPY App.tsx app.json tsconfig.json ./
+COPY assets ./assets
 COPY src ./src
 ENV CI=1 EXPO_NO_TELEMETRY=1 EXPO_PUBLIC_API_URL=/api
 RUN npm run typecheck && npm run build:web

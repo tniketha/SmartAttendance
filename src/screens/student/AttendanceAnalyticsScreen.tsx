@@ -14,6 +14,8 @@ import { Card } from '../../components/common/Card';
 import { SubjectProgressCard } from '../../components/student/SubjectProgressCard';
 import { studentApi } from '../../api/student.api';
 import { SubjectAttendanceStat } from '../../types/attendance.types';
+import { SemesterFilter } from '../../components/common/SemesterFilter';
+import { ALL_SEMESTERS, filterSemester } from '../../utils/semester.utils';
 
 export const AttendanceAnalyticsScreen: React.FC = () => {
   const { Colors } = useTheme();
@@ -28,6 +30,7 @@ export const AttendanceAnalyticsScreen: React.FC = () => {
   } | null>(null);
 
   const [error, setError] = useState(false);
+  const [semester, setSemester] = useState(ALL_SEMESTERS);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -68,7 +71,12 @@ export const AttendanceAnalyticsScreen: React.FC = () => {
     return Colors.absent;
   };
 
-  const pct = data?.overallPercentage || 0;
+  const subjects = filterSemester(data?.subjectWise || [], semester);
+  const totals = subjects.reduce((sum, stat) => ({
+    total: sum.total + stat.total, present: sum.present + stat.present,
+    late: sum.late + stat.late, absent: sum.absent + stat.absent,
+  }), { total: 0, present: 0, late: 0, absent: 0 });
+  const pct = totals.total ? Math.round((totals.present + totals.late) / totals.total * 100) : 0;
   const overallColor = getOverallColor(pct);
 
   return (
@@ -76,36 +84,37 @@ export const AttendanceAnalyticsScreen: React.FC = () => {
       style={styles.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
+      <SemesterFilter items={data?.subjectWise || []} value={semester} onChange={setSemester} />
       {/* Overall Score Card */}
       <Card style={styles.overallCard}>
-        <Text style={styles.cardHeaderTitle}>Institute Attendance Standing</Text>
+        <Text style={styles.cardHeaderTitle}>Computer Science Attendance</Text>
         <View style={styles.gaugeContainer}>
           <View style={[styles.circleGauge, { borderColor: overallColor }]}>
-            <Text style={[styles.gaugeNumber, { color: overallColor }]}>{data?.totalClasses ? `${pct}%` : '—'}</Text>
-            <Text style={styles.gaugeSub}>Cumulative</Text>
+            <Text style={[styles.gaugeNumber, { color: overallColor }]}>{totals.total ? `${pct}%` : '—'}</Text>
+            <Text style={styles.gaugeSub}>{semester === ALL_SEMESTERS ? 'All semesters' : 'Selected semester'}</Text>
           </View>
         </View>
 
         <View style={styles.summaryRow}>
           <View style={styles.summaryCol}>
-            <Text style={styles.summaryNumber}>{data?.totalClasses || 0}</Text>
+            <Text style={styles.summaryNumber}>{totals.total}</Text>
             <Text style={styles.summaryLabel}>Total Classes</Text>
           </View>
           <View style={styles.summaryCol}>
             <Text style={[styles.summaryNumber, { color: Colors.present }]}>
-              {data?.totalPresent || 0}
+              {totals.present}
             </Text>
             <Text style={styles.summaryLabel}>Present</Text>
           </View>
           <View style={styles.summaryCol}>
             <Text style={[styles.summaryNumber, { color: Colors.late }]}>
-              {data?.totalLate || 0}
+              {totals.late}
             </Text>
             <Text style={styles.summaryLabel}>Late</Text>
           </View>
           <View style={styles.summaryCol}>
             <Text style={[styles.summaryNumber, { color: Colors.absent }]}>
-              {data?.totalAbsent || 0}
+              {totals.absent}
             </Text>
             <Text style={styles.summaryLabel}>Absent</Text>
           </View>
@@ -115,7 +124,7 @@ export const AttendanceAnalyticsScreen: React.FC = () => {
       {/* Subject-Wise Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Subject-Wise Analytics</Text>
-        {data?.subjectWise.map((stat) => (
+        {subjects.map((stat) => (
           <SubjectProgressCard key={stat.moduleCode} stat={stat} />
         ))}
       </View>

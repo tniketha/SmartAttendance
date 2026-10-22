@@ -5,6 +5,7 @@
  */
 const { MongoClient, ObjectId } = require('mongodb');
 const bcrypt = require('bcrypt');
+const demo = require('./demo-data.json');
 
 require('dotenv').config();
 if (process.env.NODE_ENV === 'production' || process.env.ALLOW_DEMO_RESET !== 'true') throw new Error('Demo reset disabled. Use a disposable development database and set ALLOW_DEMO_RESET=true.');
@@ -44,34 +45,36 @@ async function main() {
   const deptId = new ObjectId();
   await db.collection('departments').insertOne({
     _id: deptId,
-    name: 'Department of Physical Science',
-    code: 'DPS',
+    name: demo.department.name,
+    code: demo.department.code,
   });
-  console.log('✓ Created Department: Department of Physical Science');
+  console.log(`✓ Created Department: ${demo.department.name}`);
 
   // ─── 2. Admin User ───────────────────────────────────────────────────
   const adminUserId = new ObjectId();
   await db.collection('users').insertOne({
     _id: adminUserId,
-    email: 'admin@univ.ac.lk',
+    email: demo.admin.email,
     password_hash: passwordHash,
-    name: 'System Administrator',
+    name: demo.admin.name,
     role: 'ADMIN',
     is_active: true,
+    sessionVersion: 0,
     created_at: now,
     updated_at: now,
   });
-  console.log('✓ Created Admin: admin@univ.ac.lk');
+  console.log(`✓ Created Admin: ${demo.admin.name}`);
 
   // ─── 3. Lecturer User + Profile ──────────────────────────────────────
   const lecturerUserId = new ObjectId();
   await db.collection('users').insertOne({
     _id: lecturerUserId,
-    email: 'lecturer@univ.ac.lk',
+    email: demo.lecturer.email,
     password_hash: passwordHash,
-    name: 'Dr. Robert Smith',
+    name: demo.lecturer.name,
     role: 'LECTURER',
     is_active: true,
+    sessionVersion: 0,
     created_at: now,
     updated_at: now,
   });
@@ -80,18 +83,14 @@ async function main() {
   await db.collection('lecturers').insertOne({
     _id: lecturerId,
     user_id: lecturerUserId,
-    employee_number: 'EMP001',
+    employee_number: demo.lecturer.employeeNumber,
     department_id: deptId,
-    title: 'Senior Lecturer',
+    title: demo.lecturer.title,
   });
-  console.log('✓ Created Lecturer: Dr. Robert Smith (EMP001)');
+  console.log(`✓ Created Lecturer: ${demo.lecturer.name}`);
 
   // ─── 4. Modules ──────────────────────────────────────────────────────
-  const modulesData = [
-    { moduleCode: 'CSC3213', moduleName: 'Computer Architecture' },
-    { moduleCode: 'CSH3153', moduleName: 'Human Computer Interaction' },
-    { moduleCode: 'CSC3112', moduleName: 'Computer Graphics' },
-  ];
+  const modulesData = demo.modules;
 
   const moduleIds = [];
   for (const m of modulesData) {
@@ -103,25 +102,14 @@ async function main() {
       module_name: m.moduleName,
       department_id: deptId,
       lecturer_id: lecturerId,
-      academic_year: 'Year 3',
-      semester: 1,
+      academic_year: m.academicYear,
+      semester: m.semester,
     });
     console.log(`✓ Created Module: ${m.moduleCode} - ${m.moduleName}`);
   }
 
   // ─── 5. Students ─────────────────────────────────────────────────────
-  const studentsList = [
-    { num: 'STU001', name: 'Nimal Perera',          email: 'stu001@student.univ.ac.lk' },
-    { num: 'STU002', name: 'Kamal Silva',            email: 'stu002@student.univ.ac.lk' },
-    { num: 'STU003', name: 'Amal Fernando',          email: 'stu003@student.univ.ac.lk' },
-    { num: 'STU004', name: 'Sunil Jayawardena',      email: 'stu004@student.univ.ac.lk' },
-    { num: 'STU005', name: 'Kasun Bandara',          email: 'stu005@student.univ.ac.lk' },
-    { num: 'STU006', name: 'Dilani Wickramasinghe',  email: 'stu006@student.univ.ac.lk' },
-    { num: 'STU007', name: 'Ruwan Dissanayake',      email: 'stu007@student.univ.ac.lk' },
-    { num: 'STU008', name: 'Anura Gunasekara',       email: 'stu008@student.univ.ac.lk' },
-    { num: 'STU009', name: 'Chathuri Senanayake',    email: 'stu009@student.univ.ac.lk' },
-    { num: 'STU010', name: 'Mahesh Thilakarathne',   email: 'stu010@student.univ.ac.lk' },
-  ];
+  const studentsList = demo.students;
 
   let studentCount = 0;
   for (const s of studentsList) {
@@ -133,6 +121,7 @@ async function main() {
       name: s.name,
       role: 'STUDENT',
       is_active: true,
+      sessionVersion: 0,
       created_at: now,
       updated_at: now,
     });
@@ -141,14 +130,14 @@ async function main() {
     await db.collection('students').insertOne({
       _id: stuId,
       user_id: stuUserId,
-      student_number: s.num,
+      student_number: s.studentNumber,
       department_id: deptId,
-      programme: 'BSc Honours in Computer Science',
-      academic_year: 'Year 3',
-      batch: '2023/2024',
+      programme: demo.programme,
+      academic_year: demo.academicYear,
+      batch: demo.batch,
     });
 
-    // Enroll in all 3 modules
+    // Enroll in the selected Computer Science curriculum modules
     for (const mod of moduleIds) {
       await db.collection('enrollments').insertOne({
         _id: new ObjectId(),
@@ -167,9 +156,9 @@ async function main() {
   console.log('─────────────────────────────────────────────');
   console.log('Default password for ALL accounts: password123');
   console.log('─────────────────────────────────────────────');
-  console.log('👨‍💼 Lecturer :  lecturer@univ.ac.lk');
-  console.log('👨‍🎓 Students :  stu001@student.univ.ac.lk  →  stu010@student.univ.ac.lk');
-  console.log('🛡️  Admin    :  admin@univ.ac.lk');
+  console.log(`Lecturer: ${demo.lecturer.email}`);
+  console.log(`Students: ${demo.students[0].studentNumber} through ${demo.students.at(-1).studentNumber}`);
+  console.log(`Admin: ${demo.admin.email}`);
   console.log('─────────────────────────────────────────────');
 }
 

@@ -13,11 +13,14 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useTheme, ThemeColors } from '../../store/themeStore';
 import { Card } from '../../components/common/Card';
+import { BrandLogo } from '../../components/common/BrandLogo';
+import { InstitutionIdentity } from '../../components/common/InstitutionIdentity';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { useAuthStore } from '../../store/authStore';
 import { studentApi, StudentDashboardResponse } from '../../api/student.api';
 import { formatTime } from '../../utils/date.utils';
+import { semesterLabel } from '../../utils/semester.utils';
 
 export const StudentHomeScreen: React.FC = () => {
   const { Colors } = useTheme();
@@ -77,13 +80,21 @@ export const StudentHomeScreen: React.FC = () => {
     >
       {/* Top Banner Header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Hello, {user?.name}</Text>
-        <Text style={styles.studentId}>
-          ID: {user?.student?.studentNumber || 'Not provided'} • {user?.student?.programme}
-        </Text>
+        <View style={styles.brandRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.greeting}>Hello, {user?.name}</Text>
+            <Text style={styles.studentId}>
+              ID: {user?.student?.studentNumber || 'Not provided'} • {user?.student?.programme}
+            </Text>
+          </View>
+          <BrandLogo size={44} />
+        </View>
+        <InstitutionIdentity inverse />
       </View>
 
-      <Button title="View attendance insights" variant="outline" onPress={() => navigation.navigate('AttendanceAnalytics')} />
+      <View style={styles.insightsAction}>
+        <Button title="View attendance insights" variant="outline" onPress={() => navigation.navigate('AttendanceAnalytics')} />
+      </View>
       {/* Metrics Grid */}
       <View style={styles.statsGrid}>
         <Card style={styles.statCard}>
@@ -96,7 +107,7 @@ export const StudentHomeScreen: React.FC = () => {
           >
             {stats?.totalClasses ? `${stats.overallPercentage}%` : '—'}
           </Text>
-          <Text style={styles.statSub}>Overall Rate</Text>
+          <Text style={styles.statSub}>All semesters</Text>
         </Card>
 
         <Card style={styles.statCard}>
@@ -146,6 +157,7 @@ export const StudentHomeScreen: React.FC = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sessionCode}>{session.moduleCode}</Text>
                   <Text style={styles.sessionName}>{session.moduleName}</Text>
+                  <Text style={{ color: Colors.textSecondary, fontSize: 12, marginTop: 4 }}>{semesterLabel(session)}</Text>
                 </View>
                 <Badge
                   label={session.status}
@@ -207,6 +219,11 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
   },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
   studentId: {
     fontSize: 13,
     color: '#CBD5E1',
@@ -217,7 +234,10 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    marginTop: -16,
+  },
+  insightsAction: {
+    marginHorizontal: 16,
+    marginVertical: 16,
   },
   statCard: {
     width: '48%',

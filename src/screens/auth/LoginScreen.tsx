@@ -1,4 +1,3 @@
-import { Alert } from '../../utils/alert.utils';
 import React, { useState } from 'react';
 import {
   View,
@@ -8,12 +7,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TouchableOpacity,
 } from 'react-native';
 import { useTheme, ThemeColors } from '../../store/themeStore';
 import { Button } from '../../components/common/Button';
 import { authApi } from '../../api/auth.api';
 import { useAuthStore } from '../../store/authStore';
+import { BrandLogo } from '../../components/common/BrandLogo';
+import { InstitutionIdentity } from '../../components/common/InstitutionIdentity';
 
 export const LoginScreen: React.FC = () => {
   const { Colors } = useTheme();
@@ -54,15 +54,15 @@ export const LoginScreen: React.FC = () => {
     >
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>SA</Text>
-          </View>
+          <BrandLogo size={80} />
           <Text style={styles.appTitle}>Smart Attendance</Text>
-          <Text style={styles.subtitle}>University Attendance Management System</Text>
+          <InstitutionIdentity centered />
+          <Text style={styles.subtitle}>Every class. Every check-in. Connected.</Text>
         </View>
 
         <View style={styles.formCard}>
           <Text style={styles.formTitle}>Sign In</Text>
+          <Text style={styles.formDescription}>Use your university account to continue.</Text>
 
           <Text style={styles.label}>Email or Student / Employee ID</Text>
           <TextInput
@@ -97,9 +97,8 @@ export const LoginScreen: React.FC = () => {
             loading={loading}
             style={styles.loginButton}
           />
-
-
         </View>
+        <Text style={styles.footer}>Built for students, lecturers and administrators.</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -122,34 +121,18 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
-  logoBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: Colors.primaryDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  logoText: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: '#FFFFFF',
-  },
   appTitle: {
-    fontSize: 24,
+    marginTop: 18,
+    fontSize: 28,
     fontWeight: '800',
     color: Colors.textPrimary,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
     color: Colors.textSecondary,
     marginTop: 4,
+    textAlign: 'center',
   },
   formCard: {
     backgroundColor: Colors.surface,
@@ -167,7 +150,12 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: Colors.textPrimary,
-    marginBottom: 16,
+    marginBottom: 6,
+  },
+  formDescription: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 14,
   },
   label: {
     fontSize: 13,
@@ -189,36 +177,11 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   loginButton: {
     marginTop: 20,
   },
-  demoSection: {
-    marginTop: 24,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  demoTitle: {
+  footer: {
     fontSize: 12,
-    fontWeight: '700',
+    lineHeight: 18,
     color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
+    marginTop: 24,
     textAlign: 'center',
-  },
-  demoButtonsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  demoPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    backgroundColor: Colors.surface,
-  },
-  demoPillText: {
-    fontSize: 12,
-    fontWeight: '700',
   },
 });

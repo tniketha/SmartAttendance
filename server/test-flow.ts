@@ -12,9 +12,9 @@ async function runTests() {
     console.log('   ✓ Health check passed:', health.data.status);
 
     // 2. Lecturer Login
-    console.log('\n2️⃣ Testing Lecturer Login (lecturer@univ.ac.lk)...');
+    console.log('\n2️⃣ Testing Lecturer Login (niketha@lecturer.example.com)...');
     const lecLogin = await axios.post(`${BASE_URL}/auth/login`, {
-      identifier: 'lecturer@univ.ac.lk',
+      identifier: 'niketha@lecturer.example.com',
       password: 'password123',
     });
     const lecturerToken = lecLogin.data.data.accessToken;
@@ -23,7 +23,7 @@ async function runTests() {
     // 3. Student 1 Login
     console.log('\n3️⃣ Testing Student Login (STU001)...');
     const stu1Login = await axios.post(`${BASE_URL}/auth/login`, {
-      identifier: 'stu001@student.univ.ac.lk',
+      identifier: 'nikky@student.example.com',
       password: 'password123',
     });
     const student1Token = stu1Login.data.data.accessToken;

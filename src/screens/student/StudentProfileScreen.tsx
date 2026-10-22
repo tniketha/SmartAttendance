@@ -1,4 +1,5 @@
 import { AccountSettings } from '../../components/common/AccountSettings';
+import { InstitutionIdentity } from '../../components/common/InstitutionIdentity';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme, ThemeColors } from '../../store/themeStore';
@@ -30,6 +31,7 @@ export const StudentProfileScreen: React.FC = () => {
         </View>
         <Text style={styles.name}>{user?.name}</Text>
         <Text style={styles.email}>{user?.email}</Text>
+        <InstitutionIdentity centered />
       </View>
 
       {/* Info Card */}

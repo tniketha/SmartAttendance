@@ -10,6 +10,8 @@ export interface QRPayload {
 }
 
 export interface AttendanceRecord {
+  academicYear: string;
+  semester: number;
   review?: { status: string; decisionReason?: string | null } | null;
   id: string;
   sessionId: string;
@@ -34,6 +36,8 @@ export interface StudentDashboardStats {
 }
 
 export interface TodayClassSession {
+  academicYear: string;
+  semester: number;
   id: string;
   sessionCode: string;
   moduleCode: string;
@@ -46,6 +50,8 @@ export interface TodayClassSession {
 }
 
 export interface SubjectAttendanceStat {
+  academicYear: string;
+  semester: number;
   moduleCode: string;
   moduleName: string;
   total: number;
@@ -67,6 +73,8 @@ export interface LecturerDashboardData {
     enrolledCount: number;
   }>;
   todaySessions: Array<{
+    academicYear: string;
+    semester: number;
     id: string;
     sessionCode: string;
     moduleCode: string;
@@ -90,6 +98,8 @@ export interface LiveCheckedInStudent {
 
 export interface LiveSessionData {
   session: {
+    academicYear: string;
+    semester: number;
     id: string;
     sessionCode: string;
     moduleCode: string;

@@ -12,11 +12,14 @@ import {
 import { useTheme, ThemeColors } from '../../store/themeStore';
 import { Card } from '../../components/common/Card';
 import { studentApi } from '../../api/student.api';
+import { SemesterFilter } from '../../components/common/SemesterFilter';
+import { ALL_SEMESTERS, filterSemester, semesterLabel } from '../../utils/semester.utils';
 
 export const StudentModulesScreen: React.FC = () => {
   const { Colors } = useTheme();
   const styles = React.useMemo(() => createStyles(Colors), [Colors]);
   const [modules, setModules] = useState<any[]>([]);
+  const [semester, setSemester] = useState(ALL_SEMESTERS);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,9 +58,11 @@ export const StudentModulesScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={modules}
+        data={filterSemester(modules, semester)}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={<SemesterFilter items={modules} value={semester} onChange={setSemester} />}
+        ListEmptyComponent={<Text style={styles.department}>No modules for this semester.</Text>}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={({ item }) => (
           <Card style={styles.card}>
@@ -66,6 +71,7 @@ export const StudentModulesScreen: React.FC = () => {
               <Text style={styles.percentage}>{item.stats.total ? `${item.stats.percentage}%` : '—'}</Text>
             </View>
             <Text style={styles.moduleName}>{item.moduleName}</Text>
+            <Text style={styles.lecturer}>{semesterLabel(item)}</Text>
             <Text style={styles.lecturer}>Lecturer: {item.lecturerName}</Text>
             <Text style={styles.department}>Department: {item.department}</Text>
             <View style={styles.divider} />

@@ -1,6 +1,36 @@
+![Smart Attendance — full-stack project by tniketha](assets/brand/portfolio-cover.png)
+
 # Smart Attendance
 
+**A full-stack university attendance project by [tniketha](https://github.com/tniketha).**
+
+React Native · Expo · TypeScript · Express · Prisma · MongoDB · Socket.IO
+
+The portfolio demo is set at **University of Vavuniya · Faculty of Applied Science**, with fictional Tamil student/lecturer names and twelve Year 3 Computer Science modules grouped into Semesters 1 and 2. See [demo context and curriculum sources](docs/DEMO_CONTEXT.md).
+
 An Expo / React Native app for web, Android and iOS, with an Express API and MongoDB through Prisma 5.22. Students scan short-lived classroom QR codes, lecturers manage attendance, and administrators view system activity.
+
+Read the [portfolio case study](docs/PORTFOLIO.md) for the architecture, engineering decisions, skills demonstrated and a suggested demo walkthrough. [Logo and cover assets](assets/brand/README.md) are included for portfolio use.
+
+## Screenshots
+
+Actual app screens with synthetic demo data. Mobile images show the responsive web app at a phone-sized viewport.
+
+| Sign in | Student dashboard | Attendance insights |
+| --- | --- | --- |
+| <img src="docs/screenshots/sign-in-mobile.jpg" width="240" alt="Branded sign-in screen" /> | <img src="docs/screenshots/student-dashboard-mobile.jpg" width="240" alt="Student dashboard with demo attendance records" /> | <img src="docs/screenshots/student-analytics-mobile.jpg" width="240" alt="Attendance analytics and subject breakdown" /> |
+
+See the [full screenshot gallery](docs/screenshots/README.md) for lecturer tools, live QR attendance, reports, administration and dark mode, plus instructions to recreate the demo data.
+
+## At a glance
+
+| Role | Main workflow |
+| --- | --- |
+| Student | Scan a classroom QR, track attendance and request corrections. |
+| Lecturer | Start sessions, monitor a live roster, review corrections and export reports. |
+| Administrator | View system activity, attendance summaries and audit records. |
+
+This project demonstrates cross-platform interfaces, API authorization, transactional data workflows and real-time communication. Deployment requirements and known limitations are documented below and in the [security review](SECURITY_REVIEW.md).
 
 ## What is included
 
@@ -41,7 +71,7 @@ Open **http://localhost:8080**. The web build uses its current origin for `/api`
 docker compose --profile demo run --rm -e ALLOW_DEMO_RESET=true seed
 ```
 
-**Seeding deletes demo collections. Do not run it on real data.** Demo logins: `admin@univ.ac.lk`, `lecturer@univ.ac.lk`, and `stu001@student.univ.ac.lk` through `stu010@student.univ.ac.lk`; all use `password123`.
+**Seeding deletes demo collections. Do not run it on real data.** Demo logins: `admin@example.com` (Tharshini), `niketha@lecturer.example.com` (Ms. Niketha), and `STU001` (Nikky) through `STU010`; all use `password123`. These fictional accounts use the shared [demo dataset](server/prisma/demo-data.json).
 
 Useful commands:
 

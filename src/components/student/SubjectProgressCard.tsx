@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Card } from '../common/Card';
 import { useTheme, ThemeColors } from '../../store/themeStore';
 import { SubjectAttendanceStat } from '../../types/attendance.types';
+import { semesterLabel } from '../../utils/semester.utils';
 
 interface Props {
   stat: SubjectAttendanceStat;
@@ -27,6 +28,7 @@ export const SubjectProgressCard: React.FC<Props> = ({ stat }) => {
           <Text style={styles.name} numberOfLines={1}>
             {stat.moduleName}
           </Text>
+          <Text style={{ fontSize: 12, color: Colors.textSecondary, marginTop: 4 }}>{semesterLabel(stat)}</Text>
         </View>
         <View style={styles.percentageContainer}>
           <Text style={[styles.percentageText, { color: progressColor }]}>

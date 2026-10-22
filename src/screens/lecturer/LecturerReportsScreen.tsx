@@ -15,12 +15,16 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { lecturerApi } from '../../api/lecturer.api';
 import { reportsApi } from '../../api/reports.api';
+import { SemesterFilter } from '../../components/common/SemesterFilter';
+import { ALL_SEMESTERS, filterSemester, semesterLabel } from '../../utils/semester.utils';
 
 export const LecturerReportsScreen: React.FC = () => {
   const { Colors } = useTheme();
   const styles = React.useMemo(() => createStyles(Colors), [Colors]);
   const [exporting, setExporting] = useState(false);
   const [modules, setModules] = useState<any[]>([]);
+  const [semester, setSemester] = useState(ALL_SEMESTERS);
+  const visibleModules = React.useMemo(() => filterSemester(modules, semester), [modules, semester]);
   const [selectedModuleId, setSelectedModuleId] = useState<string>('');
   const [reportData, setReportData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +47,13 @@ export const LecturerReportsScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!selectedModuleId) return;
+    if (!visibleModules.some(module => module.id === selectedModuleId)) {
+      setSelectedModuleId(visibleModules[0]?.id || '');
+    }
+  }, [visibleModules, selectedModuleId]);
+
+  useEffect(() => {
+    if (!selectedModuleId) { setReportData(null); return; }
 
     let current = true;
     (async () => {
@@ -82,9 +92,10 @@ export const LecturerReportsScreen: React.FC = () => {
         catch (e: any) { Alert.alert('Export failed', e.response?.data?.error || e.message || 'Please try again.'); }
         finally { setExporting(false); }
       }} />
+      <SemesterFilter items={modules} value={semester} onChange={setSemester} />
       {/* Module Selector */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectorScroll}>
-        {modules.map((m) => {
+        {visibleModules.map((m) => {
           const isSelected = m.id === selectedModuleId;
           return (
             <TouchableOpacity
@@ -112,6 +123,7 @@ export const LecturerReportsScreen: React.FC = () => {
             <Text style={styles.moduleMeta}>
               {reportData.module.moduleCode} • {reportData.module.department}
             </Text>
+            <Text style={styles.moduleMeta}>{semesterLabel(reportData.module)}</Text>
 
             <View style={styles.statsRow}>
               <View style={styles.statBox}>

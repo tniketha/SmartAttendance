@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Smart Attendance</title>
+  <desc id="desc">A white scan pattern and mint checkmark on a deep blue tile.</desc>
+  <rect width="128" height="128" rx="30" fill="#172554"/>
+  <g stroke="#FFFFFF" stroke-width="7" stroke-linejoin="round">
+    <path d="M31 53V31H53V53Z"/>
+    <path d="M75 31H97V53H75Z"/>
+    <path d="M31 75H53V97H31Z"/>
+  </g>
+  <path d="M69 84L81 96L103 69" stroke="#6EE7B7" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

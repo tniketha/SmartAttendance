@@ -1,0 +1,37 @@
+{
+  "university": "University of Vavuniya",
+  "faculty": "Faculty of Applied Science",
+  "department": { "name": "Department of Physical Science", "code": "DPS" },
+  "programme": "BSc Honours in Computer Science",
+  "academicYear": "Year 3",
+  "batch": "2023/2024",
+  "curriculumSource": "https://fas.vau.ac.lk/dps/amc/",
+  "admin": { "name": "Tharshini", "email": "admin@example.com" },
+  "lecturer": { "name": "Ms. Niketha", "email": "niketha@lecturer.example.com", "employeeNumber": "EMP001", "title": "Lecturer" },
+  "students": [
+    { "studentNumber": "STU001", "name": "Nikky", "email": "nikky@student.example.com" },
+    { "studentNumber": "STU002", "name": "Kavitha", "email": "kavitha@student.example.com" },
+    { "studentNumber": "STU003", "name": "Karthik", "email": "karthik@student.example.com" },
+    { "studentNumber": "STU004", "name": "Arul", "email": "arul@student.example.com" },
+    { "studentNumber": "STU005", "name": "Nivetha", "email": "nivetha@student.example.com" },
+    { "studentNumber": "STU006", "name": "Thivya", "email": "thivya@student.example.com" },
+    { "studentNumber": "STU007", "name": "Saran", "email": "saran@student.example.com" },
+    { "studentNumber": "STU008", "name": "Abirami", "email": "abirami@student.example.com" },
+    { "studentNumber": "STU009", "name": "Tamilini", "email": "tamilini@student.example.com" },
+    { "studentNumber": "STU010", "name": "Yathushan", "email": "yathushan@student.example.com" }
+  ],
+  "modules": [
+    { "moduleCode": "CSC3112", "moduleName": "Computer Graphics", "academicYear": "Year 3", "semester": 1 },
+    { "moduleCode": "CSC3123", "moduleName": "Operating Systems", "academicYear": "Year 3", "semester": 1 },
+    { "moduleCode": "CSC3132", "moduleName": "Web Application Development", "academicYear": "Year 3", "semester": 1 },
+    { "moduleCode": "CSH3143", "moduleName": "Knowledge Representation and Programming in Logic", "academicYear": "Year 3", "semester": 1 },
+    { "moduleCode": "CSH3153", "moduleName": "Human Computer Interaction", "academicYear": "Year 3", "semester": 1 },
+    { "moduleCode": "CSH3163", "moduleName": "Advanced Database System", "academicYear": "Year 3", "semester": 1 },
+    { "moduleCode": "CSC3213", "moduleName": "Computer Architecture", "academicYear": "Year 3", "semester": 2 },
+    { "moduleCode": "CSC3222", "moduleName": "Graph Theory", "academicYear": "Year 3", "semester": 2 },
+    { "moduleCode": "CSH3242", "moduleName": "Theory of Computation", "academicYear": "Year 3", "semester": 2 },
+    { "moduleCode": "CSH3254", "moduleName": "Parallel Computing", "academicYear": "Year 3", "semester": 2 },
+    { "moduleCode": "CSH3263", "moduleName": "Advanced Computer Networks", "academicYear": "Year 3", "semester": 2 },
+    { "moduleCode": "CSH3273", "moduleName": "Artificial Intelligence", "academicYear": "Year 3", "semester": 2 }
+  ]
+}

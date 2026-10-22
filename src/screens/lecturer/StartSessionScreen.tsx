@@ -15,6 +15,8 @@ import { useTheme, ThemeColors } from '../../store/themeStore';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { lecturerApi } from '../../api/lecturer.api';
+import { SemesterFilter } from '../../components/common/SemesterFilter';
+import { ALL_SEMESTERS, filterSemester, semesterLabel } from '../../utils/semester.utils';
 
 export const StartSessionScreen: React.FC = () => {
   const { Colors } = useTheme();
@@ -22,6 +24,8 @@ export const StartSessionScreen: React.FC = () => {
   const navigation = useNavigation<any>();
 
   const [modules, setModules] = useState<any[]>([]);
+  const [semester, setSemester] = useState(ALL_SEMESTERS);
+  const visibleModules = React.useMemo(() => filterSemester(modules, semester), [modules, semester]);
   const [selectedModuleId, setSelectedModuleId] = useState<string>('');
   const [duration, setDuration] = useState<number>(10); // minutes
   const [lateThreshold, setLateThreshold] = useState<number>(5); // minutes
@@ -48,6 +52,12 @@ export const StartSessionScreen: React.FC = () => {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (!visibleModules.some(module => module.id === selectedModuleId)) {
+      setSelectedModuleId(visibleModules[0]?.id || '');
+    }
+  }, [visibleModules, selectedModuleId]);
 
   const handleToggleGeo = async (val: boolean) => {
     setGeoEnabled(val);
@@ -132,7 +142,8 @@ export const StartSessionScreen: React.FC = () => {
       {/* Select Module */}
       <Card style={styles.card}>
         <Text style={styles.sectionHeader}>1. Select Module</Text>
-        {modules.map((m) => {
+        <SemesterFilter items={modules} value={semester} onChange={setSemester} />
+        {visibleModules.map((m) => {
           const isSelected = m.id === selectedModuleId;
           return (
             <TouchableOpacity
@@ -147,6 +158,7 @@ export const StartSessionScreen: React.FC = () => {
                 <Text style={[styles.moduleName, isSelected && styles.selectedSub]}>
                   {m.moduleName}
                 </Text>
+                <Text style={[styles.moduleName, isSelected && styles.selectedSub]}>{semesterLabel(m)}</Text>
               </View>
               <Text style={[styles.enrolledCount, isSelected && styles.selectedText]}>
                 {m.enrolledCount} Students

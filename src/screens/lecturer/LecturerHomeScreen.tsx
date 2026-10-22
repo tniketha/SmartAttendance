@@ -13,12 +13,15 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useTheme, ThemeColors } from '../../store/themeStore';
 import { Card } from '../../components/common/Card';
+import { BrandLogo } from '../../components/common/BrandLogo';
+import { InstitutionIdentity } from '../../components/common/InstitutionIdentity';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { useAuthStore } from '../../store/authStore';
 import { lecturerApi } from '../../api/lecturer.api';
 import { LecturerDashboardData } from '../../types/attendance.types';
 import { formatTime } from '../../utils/date.utils';
+import { semesterLabel } from '../../utils/semester.utils';
 
 export const LecturerHomeScreen: React.FC = () => {
   const { Colors } = useTheme();
@@ -69,11 +72,17 @@ export const LecturerHomeScreen: React.FC = () => {
     >
       {/* Top Banner Header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Good Day, {user?.name}</Text>
-        <Text style={styles.lecturerId}>
-          {user?.lecturer?.title || 'Lecturer'} • {user?.lecturer?.employeeNumber} •{' '}
-          {user?.lecturer?.department}
-        </Text>
+        <View style={styles.brandRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.greeting}>Good Day, {user?.name}</Text>
+            <Text style={styles.lecturerId}>
+              {user?.lecturer?.title || 'Lecturer'} • {user?.lecturer?.employeeNumber} •{' '}
+              {user?.lecturer?.department}
+            </Text>
+          </View>
+          <BrandLogo size={44} />
+        </View>
+        <InstitutionIdentity inverse />
       </View>
 
       {/* Metrics Row */}
@@ -119,6 +128,7 @@ export const LecturerHomeScreen: React.FC = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sessionCode}>{session.moduleCode}</Text>
                   <Text style={styles.sessionName}>{session.moduleName}</Text>
+                  <Text style={styles.sessionRef}>{semesterLabel(session)}</Text>
                   <Text style={styles.sessionRef}>{session.sessionCode}</Text>
                 </View>
                 <Badge
@@ -183,6 +193,11 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
   lecturerId: {
     fontSize: 13,

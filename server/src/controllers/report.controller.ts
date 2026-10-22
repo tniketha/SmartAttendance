@@ -95,6 +95,8 @@ export class ReportController {
           id: moduleItem.id,
           moduleCode: moduleItem.moduleCode,
           moduleName: moduleItem.moduleName,
+          academicYear: moduleItem.academicYear,
+          semester: moduleItem.semester,
           department: moduleItem.department.name,
           lecturerName: moduleItem.lecturer.user.name,
           totalEnrolled: moduleItem.enrollments.length,

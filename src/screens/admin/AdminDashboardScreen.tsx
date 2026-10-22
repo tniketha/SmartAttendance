@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { useTheme, ThemeColors } from '../../store/themeStore';
 import { Card } from '../../components/common/Card';
+import { BrandLogo } from '../../components/common/BrandLogo';
+import { INSTITUTION } from '../../constants/institution';
 import { Button } from '../../components/common/Button';
 import { adminApi } from '../../api/admin.api';
 import { useAuthStore } from '../../store/authStore';
@@ -65,8 +67,14 @@ export const AdminDashboardScreen: React.FC = () => {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>System Administration</Text>
-        <Text style={styles.subtitle}>Smart Attendance Institute Control Panel</Text>
+        <View style={styles.brandRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>System Administration</Text>
+            <Text style={styles.subtitle}>{INSTITUTION.university}</Text>
+            <Text style={styles.subtitle}>{INSTITUTION.faculty}</Text>
+          </View>
+          <BrandLogo size={44} />
+        </View>
       </View>
 
       {/* Overview Metrics */}
@@ -143,6 +151,11 @@ export const AdminDashboardScreen: React.FC = () => {
 };
 
 const createStyles = (Colors: ThemeColors) => StyleSheet.create({
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.background,

@@ -17,6 +17,7 @@ import { AttendanceStatusBadge } from '../../components/student/AttendanceStatus
 import { studentApi } from '../../api/student.api';
 import { AttendanceRecord } from '../../types/attendance.types';
 import { formatDate, formatTime } from '../../utils/date.utils';
+import { semesterLabel } from '../../utils/semester.utils';
 
 type FilterType = 'ALL' | 'PRESENT' | 'LATE' | 'ABSENT' | 'EXCUSED';
 
@@ -71,6 +72,7 @@ export const AttendanceHistoryScreen: React.FC = () => {
         <View style={{ flex: 1 }}>
           <Text style={styles.moduleCode}>{item.moduleCode}</Text>
           <Text style={styles.moduleName}>{item.moduleName}</Text>
+          <Text style={styles.dateText}>{semesterLabel(item)}</Text>
         </View>
         <AttendanceStatusBadge status={item.status} />
       </View>
