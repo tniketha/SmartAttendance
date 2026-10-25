@@ -1,0 +1,156 @@
+// Create fictional demo users, modules and enrollment.
+const { client, ObjectId, connectDatabase } = require("../src/config/database");
+const bcrypt = require("bcrypt");
+const demo = require("../data/demo-data.json");
+
+require("dotenv").config();
+if (
+  process.env.NODE_ENV === "production" ||
+  process.env.ALLOW_DEMO_RESET !== "true"
+)
+  throw new Error(
+    "Demo reset disabled. Use a disposable development database and set ALLOW_DEMO_RESET=true.",
+  );
+const MONGO_URL = process.env.DATABASE_URL;
+if (!MONGO_URL) throw new Error("Set DATABASE_URL before seeding demo data.");
+const DB_NAME = new URL(MONGO_URL).pathname.slice(1);
+if (!DB_NAME) throw new Error("DATABASE_URL must name a database");
+
+async function main() {
+  await connectDatabase();
+  const db = client.db(DB_NAME);
+
+  console.log("🌱 Connected to MongoDB. Starting seed...\n");
+
+  // Drop collections in safe order
+  const collections = [
+    "attendance_records",
+    "attendance_sessions",
+    "enrollments",
+    "modules",
+    "students",
+    "lecturers",
+    "users",
+    "departments",
+  ];
+  for (const col of collections) {
+    await db.collection(col).deleteMany({});
+  }
+  console.log("✓ Cleared existing data");
+
+  const passwordHash = await bcrypt.hash("password123", 10);
+  const now = new Date();
+
+  // Department
+  const deptId = new ObjectId();
+  await db.collection("departments").insertOne({
+    _id: deptId,
+    name: demo.department.name,
+    code: demo.department.code,
+  });
+  console.log(`✓ Created Department: ${demo.department.name}`);
+
+  // Lecturer User + Profile
+  const lecturerUserId = new ObjectId();
+  await db.collection("users").insertOne({
+    _id: lecturerUserId,
+    email: demo.lecturer.email,
+    password_hash: passwordHash,
+    name: demo.lecturer.name,
+    role: "LECTURER",
+    is_active: true,
+    tokenHash: null,
+    created_at: now,
+    updated_at: now,
+  });
+
+  const lecturerId = new ObjectId();
+  await db.collection("lecturers").insertOne({
+    _id: lecturerId,
+    user_id: lecturerUserId,
+    employee_number: demo.lecturer.employeeNumber,
+    department_id: deptId,
+    title: demo.lecturer.title,
+  });
+  console.log(`✓ Created Lecturer: ${demo.lecturer.name}`);
+
+  // Modules
+  const modulesData = demo.modules;
+
+  const moduleIds = [];
+  for (const m of modulesData) {
+    const moduleId = new ObjectId();
+    moduleIds.push({ id: moduleId, code: m.moduleCode, name: m.moduleName });
+    await db.collection("modules").insertOne({
+      _id: moduleId,
+      module_code: m.moduleCode,
+      module_name: m.moduleName,
+      department_id: deptId,
+      lecturer_id: lecturerId,
+      academic_year: m.academicYear,
+      semester: m.semester,
+    });
+    console.log(`✓ Created Module: ${m.moduleCode} - ${m.moduleName}`);
+  }
+
+  // Students
+  const studentsList = demo.students;
+
+  let studentCount = 0;
+  for (const s of studentsList) {
+    const stuUserId = new ObjectId();
+    await db.collection("users").insertOne({
+      _id: stuUserId,
+      email: s.email,
+      password_hash: passwordHash,
+      name: s.name,
+      role: "STUDENT",
+      is_active: true,
+      tokenHash: null,
+      created_at: now,
+      updated_at: now,
+    });
+
+    const stuId = new ObjectId();
+    await db.collection("students").insertOne({
+      _id: stuId,
+      user_id: stuUserId,
+      student_number: s.studentNumber,
+      department_id: deptId,
+      programme: demo.programme,
+      academic_year: demo.academicYear,
+      batch: demo.batch,
+    });
+
+    // Enroll in the selected Computer Science curriculum modules
+    for (const mod of moduleIds) {
+      await db.collection("enrollments").insertOne({
+        _id: new ObjectId(),
+        student_id: stuId,
+        module_id: mod.id,
+        enrolled_at: now,
+      });
+    }
+    studentCount++;
+  }
+  console.log(
+    `✓ Created ${studentCount} Students, each enrolled in ${moduleIds.length} Modules`,
+  );
+
+  await client.close();
+
+  console.log("\n🎉 Database seeded successfully!");
+  console.log("─────────────────────────────────────────────");
+  console.log("Default password for ALL accounts: password123");
+  console.log("─────────────────────────────────────────────");
+  console.log(`Lecturer: ${demo.lecturer.email}`);
+  console.log(
+    `Students: ${demo.students[0].studentNumber} through ${demo.students.at(-1).studentNumber}`,
+  );
+  console.log("─────────────────────────────────────────────");
+}
+
+main().catch((e) => {
+  console.error("❌ Seed error:", e.message);
+  process.exit(1);
+});
