@@ -32,6 +32,42 @@ The demonstration uses **University of Vavuniya, Faculty of Applied Science**, f
 
 A useful interview explanation is: **screen → API request → route/controller → database → response → updated screen**. Follow one student check-in through those steps.
 
+## Run with Docker
+
+Use Docker Desktop with Linux containers (or Docker Engine with Compose v2). From the project root:
+
+```powershell
+node docker/setup.cjs
+docker compose up --build -d --wait --wait-timeout 240
+```
+
+Open **http://localhost:8080**. Node is needed only to generate local secrets; if you do not have it installed, replace the first command with:
+
+```powershell
+docker run --rm -v "${PWD}:/workspace" -w /workspace node:22-bookworm-slim node docker/setup.cjs
+```
+
+The web build, API and authenticated MongoDB replica set run in containers. The API creates indexes at startup. Only the web proxy is exposed to the host; MongoDB and the API use the private Compose network. Docker web builds use `/api` on the current browser origin, so the API address follows the website automatically.
+
+Create demo accounts **only if the database is empty**:
+
+```powershell
+docker compose --profile demo run --rm -e ALLOW_DEMO_RESET=true -e SEED_IF_EMPTY=true seed
+```
+
+This preserves any database that already contains records. The student is `STU001`, the lecturer is `niketha@lecturer.example.com`, and both use `password123`. Omitting `SEED_IF_EMPTY=true` enables the original destructive demo reset; use that only on a disposable database.
+
+```powershell
+docker compose ps -a
+docker compose logs -f api web
+docker compose --profile test run --build --rm test
+docker compose down
+```
+
+`down` preserves data. **`down -v` permanently deletes volumes.** The project is named `smartattendance-js` to preserve databases from the earlier TypeScript containers. Tests use a separate `attendance_security_test` database. Private credentials are generated in the ignored root `.env`; keep it with database backups and do not regenerate existing database passwords. Generated passwords are URI-safe hex; manually supplied MongoDB passwords must also be URI-safe.
+
+For public HTTPS hosting, set `SITE_ADDRESS=https://your-domain`, `ALLOWED_ORIGINS=https://your-domain`, `BIND_ADDRESS=0.0.0.0`, `HTTP_PORT=80` and `HTTPS_PORT=443` in the root `.env`. Point your domain to the host and allow ports 80/443. Caddy obtains and renews certificates. Keep backups; the single-node replica set provides transactions, not high availability. Native Android/iOS apps still run on a device or emulator.
+
 ## Run locally
 
 Use Node.js 22, npm and MongoDB 8. The database needs a replica set for the attendance transactions. From the project root:

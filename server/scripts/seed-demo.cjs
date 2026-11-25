@@ -20,6 +20,18 @@ async function main() {
   await connectDatabase();
   const db = client.db(DB_NAME);
 
+  // Optional first-run mode refuses to reset any database containing records.
+  if (process.env.SEED_IF_EMPTY === "true") {
+    for (const { name } of await db.listCollections({}, { nameOnly: true }).toArray()) {
+      if (name.startsWith("system.")) continue;
+      if (await db.collection(name).findOne({}, { projection: { _id: 1 } })) {
+        console.log("Demo setup skipped: the database already contains records.");
+        await client.close();
+        return;
+      }
+    }
+  }
+
   console.log("🌱 Connected to MongoDB. Starting seed...\n");
 
   // Drop collections in safe order

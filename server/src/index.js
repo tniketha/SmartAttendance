@@ -6,6 +6,8 @@ const { connectDatabase, client, db } = require("./config/database");
 const { ENV } = require("./config/env");
 const { errorHandler } = require("./middleware/error.middleware");
 const app = express();
+// Docker publishes only Caddy; local development trusts no forwarded headers.
+if (ENV.TRUST_PROXY_HOPS) app.set("trust proxy", ENV.TRUST_PROXY_HOPS);
 app.use(helmet());
 app.use(cors({ origin: ENV.ALLOWED_ORIGINS }));
 app.use(express.json({ limit: "16kb" }));
@@ -14,6 +16,9 @@ app.get("/api/health", (_req, res) => res.json({ status: "online" }));
 app.get("/api/ready", async (_req, res) => {
   try {
     await db.command({ ping: 1 });
+    const hello = await db.admin().command({ hello: 1 });
+    if (!hello.setName || !hello.isWritablePrimary)
+      throw new Error("A writable MongoDB replica set is required.");
     res.json({ success: true });
   } catch {
     res.status(503).json({ success: false, error: "Database unavailable" });
